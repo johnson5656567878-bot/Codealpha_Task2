@@ -1,0 +1,96 @@
+{% load static %}
+<aside class="app-sidebar">
+  <!-- Brand Logo -->
+  <a href="{% url 'home' %}" class="brand-wrapper">
+    <img src="{% static 'images/logo.svg' %}" alt="Nexus Logo" class="brand-logo">
+    <span class="brand-title">Nexus</span>
+  </a>
+
+  <!-- Navigation Menu -->
+  <ul class="nav-menu">
+    <li>
+      <a href="{% url 'home' %}" class="nav-item-link {% if request.resolver_match.url_name == 'home' %}active{% endif %}">
+        <i class="fa-solid fa-house"></i>
+        <span>Home</span>
+      </a>
+    </li>
+    <li>
+      <a href="{% url 'explore' %}" class="nav-item-link {% if request.resolver_match.url_name == 'explore' %}active{% endif %}">
+        <i class="fa-solid fa-compass"></i>
+        <span>Explore</span>
+      </a>
+    </li>
+    <li>
+      <a href="{% url 'search' %}" class="nav-item-link {% if request.resolver_match.url_name == 'search' %}active{% endif %}">
+        <i class="fa-solid fa-magnifying-glass"></i>
+        <span>Search</span>
+      </a>
+    </li>
+    <li>
+      <a href="{% url 'notifications_view' %}" class="nav-item-link {% if request.resolver_match.url_name == 'notifications_view' %}active{% endif %}">
+        <i class="fa-solid fa-bell"></i>
+        <span>Notifications</span>
+        <span class="nav-badge notification-badge" {% if unread_notifications_count == 0 %}style="display: none;"{% endif %}>
+          {{ unread_notifications_count }}
+        </span>
+      </a>
+    </li>
+    <li>
+      <a href="{% url 'bookmarks' %}" class="nav-item-link {% if request.resolver_match.url_name == 'bookmarks' %}active{% endif %}">
+        <i class="fa-solid fa-bookmark"></i>
+        <span>Bookmarks</span>
+      </a>
+    </li>
+    <li>
+      <a href="{% url 'profile_view' username=user.username %}" class="nav-item-link {% if request.resolver_match.url_name == 'profile_view' and target_user == user %}active{% endif %}">
+        <i class="fa-solid fa-user"></i>
+        <span>Profile</span>
+      </a>
+    </li>
+    <li>
+      <a href="{% url 'settings' %}" class="nav-item-link {% if request.resolver_match.url_name == 'settings' %}active{% endif %}">
+        <i class="fa-solid fa-gear"></i>
+        <span>Settings</span>
+      </a>
+    </li>
+    <!-- Theme Toggle Link -->
+    <li>
+      <button type="button" class="nav-item-link w-100 border-0 bg-transparent text-start theme-toggle-btn" onclick="toggleTheme()" style="cursor: pointer;">
+        <i class="fa-solid fa-moon"></i>
+        <span>Appearance</span>
+      </button>
+    </li>
+  </ul>
+
+  <!-- Current User Dropdown -->
+  <div class="dropup">
+    <div class="sidebar-user" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+      <img src="{{ current_profile.avatar_url }}" alt="{{ user.username }}" class="user-avatar-sm">
+      <div class="d-flex flex-column text-truncate" style="flex: 1;">
+        <span class="fw-bold small text-truncate" style="color: var(--text-primary);">
+          {{ current_profile.display_name }}
+        </span>
+        <span class="text-muted small text-truncate">@{{ user.username }}</span>
+      </div>
+      <i class="fa-solid fa-ellipsis text-muted"></i>
+    </div>
+    <ul class="dropdown-menu dropdown-menu-end shadow-lg rounded-3 py-2 border-0" style="background-color: var(--bg-surface-elevated); min-width: 220px;">
+      <li>
+        <a class="dropdown-item py-2 px-3 small d-flex align-items-center gap-2" href="{% url 'profile_view' username=user.username %}" style="color: var(--text-primary);">
+          <i class="fa-regular fa-user text-muted"></i> View Profile
+        </a>
+      </li>
+      <li>
+        <a class="dropdown-item py-2 px-3 small d-flex align-items-center gap-2" href="{% url 'settings' %}" style="color: var(--text-primary);">
+          <i class="fa-solid fa-sliders text-muted"></i> Account Settings
+        </a>
+      </li>
+      <li><hr class="dropdown-divider my-1 border-secondary-subtle"></li>
+      <li>
+        <button type="button" class="dropdown-item py-2 px-3 small d-flex align-items-center gap-2 text-danger border-0 bg-transparent w-100" data-bs-toggle="modal" data-bs-target="#nexusLogoutModal">
+          <i class="fa-solid fa-arrow-right-from-bracket"></i> Log Out
+        </button>
+      </li>
+    </ul>
+  </div>
+</aside>

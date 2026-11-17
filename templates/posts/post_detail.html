@@ -1,0 +1,107 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Post by @{{ post.author.username }} | Nexus{% endblock %}
+
+{% block content %}
+  <!-- Header Bar -->
+  <header class="main-header d-flex align-items-center gap-3">
+    <a href="javascript:history.back()" class="text-decoration-none text-muted">
+      <i class="fa-solid fa-arrow-left"></i>
+    </a>
+    <span class="fw-bold fs-5" style="color: var(--text-primary);">Post</span>
+  </header>
+
+  <!-- Single Post Detail -->
+  <div class="feed-container">
+    {% include 'includes/post_card.html' with post=post %}
+  </div>
+
+  <!-- Detailed Comments Thread -->
+  <section class="p-3" style="background-color: var(--bg-surface);">
+    <h6 class="fw-bold mb-3" style="color: var(--text-primary);">
+      Comments (<span class="comment-count">{{ post.comments_count }}</span>)
+    </h6>
+
+    <!-- Add Comment Box -->
+    {% if user.is_authenticated %}
+      <form class="d-flex align-items-center gap-2 mb-4" onsubmit="submitComment(event, {{ post.id }})">
+        <img src="{{ current_profile.avatar_url }}" alt="{{ user.username }}" class="user-avatar-sm">
+        <input type="text" name="content" class="form-control rounded-pill" placeholder="Post your reply..." autocomplete="off" style="background: var(--bg-subtle); color: var(--text-primary); border-color: var(--border-subtle);" required>
+        <input type="hidden" name="parent_id" id="detailParentIdInput" value="">
+        <button type="submit" class="btn btn-sm btn-primary-gradient rounded-pill px-4">
+          Reply
+        </button>
+      </form>
+    {% else %}
+      <div class="card p-3 mb-4 text-center rounded-3 border-0" style="background: var(--bg-subtle);">
+        <p class="mb-0 text-muted small">
+          <a href="{% url 'login' %}?next={{ request.path }}" class="fw-bold text-decoration-none">Log in</a> to join the conversation.
+        </p>
+      </div>
+    {% endif %}
+
+    <!-- Thread List -->
+    <div id="commentsList-{{ post.id }}">
+      {% for comment in comments %}
+        <div class="comment-item mb-3" id="commentItem-{{ comment.id }}">
+          <a href="{% url 'profile_view' username=comment.author.username %}">
+            <img src="{{ comment.author.profile.avatar_url }}" alt="{{ comment.author.username }}" class="user-avatar-sm">
+          </a>
+          <div class="comment-bubble" style="background-color: var(--bg-subtle); flex: 1;">
+            <div class="comment-header">
+              <a href="{% url 'profile_view' username=comment.author.username %}" class="comment-author-name">
+                {{ comment.author.profile.display_name }}
+              </a>
+              <div class="d-flex align-items-center gap-2">
+                <span class="comment-time">{{ comment.created_at|timesince }} ago</span>
+                {% if user == comment.author or user == post.author %}
+                  <button type="button" class="btn btn-link btn-sm p-0 text-danger" onclick="deleteComment({{ comment.id }}, {{ post.id }})">
+                    <i class="fa-solid fa-trash-can fa-xs"></i>
+                  </button>
+                {% endif %}
+              </div>
+            </div>
+            <div class="comment-text mb-2">{{ comment.formatted_content }}</div>
+
+            <!-- Reply Button -->
+            {% if user.is_authenticated %}
+              <div class="mt-1">
+                <button type="button" class="btn btn-link btn-sm p-0 text-primary small text-decoration-none" onclick="document.querySelector('input[name=content]').value = '@{{ comment.author.username }} '; document.getElementById('detailParentIdInput').value = '{{ comment.id }}'; document.querySelector('input[name=content]').focus();">
+                  <i class="fa-solid fa-reply me-1"></i> Reply
+                </button>
+              </div>
+            {% endif %}
+
+            <!-- Nested Replies List -->
+            {% if comment.replies.exists %}
+              <div class="ms-3 mt-2 ps-2 border-start border-light-subtle">
+                {% for reply in comment.replies.all %}
+                  <div class="d-flex gap-2 mt-2" id="commentItem-{{ reply.id }}">
+                    <a href="{% url 'profile_view' username=reply.author.username %}">
+                      <img src="{{ reply.author.profile.avatar_url }}" alt="{{ reply.author.username }}" class="user-avatar-sm" style="width: 28px; height: 28px;">
+                    </a>
+                    <div class="comment-bubble py-1 px-2" style="background: rgba(0,0,0,0.03); flex: 1;">
+                      <div class="d-flex justify-content-between align-items-center">
+                        <a href="{% url 'profile_view' username=reply.author.username %}" class="fw-bold small text-decoration-none" style="color: var(--text-primary);">
+                          {{ reply.author.profile.display_name }}
+                        </a>
+                        <span class="text-muted" style="font-size: 0.7rem;">{{ reply.created_at|timesince }} ago</span>
+                      </div>
+                      <div class="small">{{ reply.formatted_content }}</div>
+                    </div>
+                  </div>
+                {% endfor %}
+              </div>
+            {% endif %}
+
+          </div>
+        </div>
+      {% empty %}
+        <div class="text-center py-4 text-muted small">
+          No comments yet. Start the conversation!
+        </div>
+      {% endfor %}
+    </div>
+  </section>
+{% endblock %}

@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 400" width="100%" height="100%">
+  <defs>
+    <linearGradient id="coverGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1E1B4B" />
+      <stop offset="40%" stop-color="#312E81" />
+      <stop offset="80%" stop-color="#4C1D95" />
+      <stop offset="100%" stop-color="#831843" />
+    </linearGradient>
+    <radialGradient id="meshGlow" cx="50%" cy="30%" r="50%">
+      <stop offset="0%" stop-color="#8B5CF6" stop-opacity="0.4" />
+      <stop offset="100%" stop-color="#8B5CF6" stop-opacity="0" />
+    </radialGradient>
+  </defs>
+  <rect width="1200" height="400" fill="url(#coverGrad)"/>
+  <circle cx="600" cy="150" r="350" fill="url(#meshGlow)"/>
+  <!-- Elegant geometric accent lines -->
+  <path d="M0 350 Q 300 250, 600 350 T 1200 350" fill="none" stroke="#FFFFFF" stroke-opacity="0.1" stroke-width="2"/>
+  <path d="M0 380 Q 400 300, 800 380 T 1200 320" fill="none" stroke="#FFFFFF" stroke-opacity="0.15" stroke-width="2"/>
+</svg>

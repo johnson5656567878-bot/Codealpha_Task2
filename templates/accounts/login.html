@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Log In | Nexus{% endblock %}
+
+{% block right_sidebar %}{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center justify-content-center" style="min-height: 85vh; padding: 1.5rem;">
+  <div class="card p-4 p-md-5 border-0 shadow-lg rounded-4 w-100" style="max-width: 440px; background-color: var(--bg-surface);">
+    
+    <div class="text-center mb-4">
+      <img src="{% static 'images/logo.svg' %}" alt="Nexus Logo" class="brand-logo mb-2" style="width: 54px; height: 54px;">
+      <h3 class="fw-bold mb-1" style="color: var(--text-primary);">Welcome Back</h3>
+      <p class="text-muted small">Enter your credentials to access your Nexus feed</p>
+    </div>
+
+    <form method="POST">
+      {% csrf_token %}
+      <div class="mb-3">
+        <label class="form-label small fw-bold" style="color: var(--text-secondary);">Username or Email</label>
+        <div class="input-group">
+          <span class="input-group-text border-end-0 bg-transparent text-muted" style="border-color: var(--border-subtle);"><i class="fa-regular fa-user"></i></span>
+          <input type="text" name="username" class="form-control border-start-0" placeholder="username or you@example.com" required autofocus style="background: var(--bg-subtle); color: var(--text-primary); border-color: var(--border-subtle);">
+        </div>
+      </div>
+
+      <div class="mb-3">
+        <div class="d-flex justify-content-between align-items-center mb-1">
+          <label class="form-label small fw-bold mb-0" style="color: var(--text-secondary);">Password</label>
+          <a href="{% url 'password_reset' %}" class="small text-decoration-none">Forgot password?</a>
+        </div>
+        <div class="input-group">
+          <span class="input-group-text border-end-0 bg-transparent text-muted" style="border-color: var(--border-subtle);"><i class="fa-solid fa-lock"></i></span>
+          <input type="password" name="password" class="form-control border-start-0" placeholder="••••••••" required style="background: var(--bg-subtle); color: var(--text-primary); border-color: var(--border-subtle);">
+        </div>
+      </div>
+
+      <button type="submit" class="btn btn-primary-gradient w-100 py-2 mt-3 fw-bold">
+        Log In
+      </button>
+    </form>
+
+    <div class="text-center mt-4 pt-2 border-top border-light-subtle">
+      <span class="text-muted small">Don't have an account?</span>
+      <a href="{% url 'register' %}" class="small fw-bold text-decoration-none ms-1">Sign up for Nexus</a>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

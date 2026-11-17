@@ -1,0 +1,142 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ profile.display_name }} (@{{ target_user.username }}) | Nexus{% endblock %}
+
+{% block content %}
+  <!-- Header Bar -->
+  <header class="main-header d-flex align-items-center gap-3">
+    <a href="javascript:history.back()" class="text-decoration-none text-muted">
+      <i class="fa-solid fa-arrow-left"></i>
+    </a>
+    <div>
+      <h6 class="mb-0 fw-bold" style="color: var(--text-primary);">{{ profile.display_name }}</h6>
+      <span class="text-muted small">{{ profile.posts_count }} post{{ profile.posts_count|pluralize }}</span>
+    </div>
+  </header>
+
+  <!-- Profile Card -->
+  <div class="profile-card">
+    <!-- Cover Image -->
+    <div class="profile-cover-box">
+      <img src="{{ profile.cover_url }}" alt="Cover" class="profile-cover-img">
+    </div>
+
+    <!-- Profile Info Box -->
+    <div class="profile-info-box">
+      <div class="profile-avatar-row">
+        <img src="{{ profile.avatar_url }}" alt="{{ target_user.username }}" class="user-avatar-lg">
+
+        <div class="profile-actions-bar">
+          {% if is_self %}
+            <a href="{% url 'settings' %}" class="btn btn-sm btn-outline-custom">
+              <i class="fa-solid fa-pen me-1"></i> Edit Profile
+            </a>
+          {% else %}
+            {% if user.is_authenticated %}
+              <!-- Follow Button -->
+              <button type="button" class="btn btn-sm btn-follow {% if is_following %}following btn-outline-custom{% else %}btn-primary-gradient{% endif %}" onclick="toggleFollow('{{ target_user.username }}', this)">
+                {% if is_following %}
+                  <i class="fa-solid fa-user-check"></i> Following
+                {% else %}
+                  <i class="fa-solid fa-user-plus"></i> Follow
+                {% endif %}
+              </button>
+
+              <!-- More Options Dropdown -->
+              <div class="dropdown">
+                <button class="btn btn-sm btn-outline-custom rounded-circle p-2" type="button" data-bs-toggle="dropdown">
+                  <i class="fa-solid fa-ellipsis"></i>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end shadow border-0 py-1" style="background-color: var(--bg-surface-elevated);">
+                  <li>
+                    <button class="dropdown-item py-2 px-3 small d-flex align-items-center gap-2 text-danger border-0 bg-transparent" onclick="toggleBlock('{{ target_user.username }}', this)">
+                      <i class="fa-solid fa-ban"></i> {% if is_blocked_by_viewer %}Unblock{% else %}Block{% endif %} @{{ target_user.username }}
+                    </button>
+                  </li>
+                </ul>
+              </div>
+            {% else %}
+              <a href="{% url 'login' %}" class="btn btn-sm btn-primary-gradient">Follow</a>
+            {% endif %}
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Names & Bio -->
+      <h5 class="fw-bold mb-0" style="color: var(--text-primary);">{{ profile.display_name }}</h5>
+      <div class="text-muted small mb-2">@{{ target_user.username }}</div>
+
+      {% if profile.bio %}
+        <p class="mb-3" style="color: var(--text-primary); white-space: pre-line;">{{ profile.bio }}</p>
+      {% endif %}
+
+      <!-- Metadata (Location, Website, Joined Date) -->
+      <div class="profile-meta-row">
+        {% if profile.location %}
+          <div class="profile-meta-item">
+            <i class="fa-solid fa-location-dot"></i>
+            <span>{{ profile.location }}</span>
+          </div>
+        {% endif %}
+        {% if profile.website %}
+          <div class="profile-meta-item">
+            <i class="fa-solid fa-link"></i>
+            <a href="{{ profile.website }}" target="_blank" rel="noopener noreferrer" class="text-decoration-none">
+              {{ profile.website }}
+            </a>
+          </div>
+        {% endif %}
+        <div class="profile-meta-item">
+          <i class="fa-regular fa-calendar"></i>
+          <span>Joined {{ target_user.date_joined|date:"F Y" }}</span>
+        </div>
+      </div>
+
+      <!-- Stats Counts (Followers & Following modal triggers) -->
+      <div class="profile-stats-row">
+        <span class="stat-link" onclick="openUsersModal('Following', '/api/users/{{ target_user.username }}/following/')">
+          <strong>{{ profile.following_count }}</strong> Following
+        </span>
+        <span class="stat-link" onclick="openUsersModal('Followers', '/api/users/{{ target_user.username }}/followers/')">
+          <strong id="profileFollowersCount">{{ profile.followers_count }}</strong> Followers
+        </span>
+        <span class="stat-link">
+          <strong>{{ profile.posts_count }}</strong> Posts
+        </span>
+      </div>
+    </div>
+
+    <!-- Profile Tabs -->
+    <div class="d-flex border-top border-light-subtle">
+      <a href="?tab=posts" class="header-tab {% if active_tab == 'posts' %}active{% endif %}">Posts</a>
+      <a href="?tab=media" class="header-tab {% if active_tab == 'media' %}active{% endif %}">Media</a>
+      <a href="?tab=likes" class="header-tab {% if active_tab == 'likes' %}active{% endif %}">Likes</a>
+    </div>
+  </div>
+
+  <!-- Profile Posts Stream -->
+  <section class="feed-container">
+    {% if is_blocked_by_viewer or is_viewer_blocked %}
+      <div class="empty-state">
+        <div class="empty-state-icon text-danger">
+          <i class="fa-solid fa-ban"></i>
+        </div>
+        <h4 class="empty-state-title">User is blocked</h4>
+        <p class="empty-state-desc">You cannot view posts from this user.</p>
+      </div>
+    {% elif posts %}
+      {% for post in posts %}
+        {% include 'includes/post_card.html' with post=post %}
+      {% endfor %}
+    {% else %}
+      <div class="empty-state">
+        <div class="empty-state-icon">
+          <i class="fa-regular fa-folder-open"></i>
+        </div>
+        <h4 class="empty-state-title">No {{ active_tab }} yet</h4>
+        <p class="empty-state-desc">When @{{ target_user.username }} shares {{ active_tab }}, they'll show up here.</p>
+      </div>
+    {% endif %}
+  </section>
+{% endblock %}

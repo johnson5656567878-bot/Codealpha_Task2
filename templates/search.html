@@ -1,0 +1,102 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Search | Nexus{% endblock %}
+
+{% block content %}
+  <header class="main-header">
+    <form action="{% url 'search' %}" method="GET" class="w-100">
+      <div class="search-widget">
+        <i class="fa-solid fa-magnifying-glass search-icon"></i>
+        <input type="text" name="q" class="search-input" placeholder="Search people, posts, #hashtags..." value="{{ query }}">
+        <input type="hidden" name="type" value="{{ tab }}">
+      </div>
+    </form>
+  </header>
+
+  <!-- Filter Tabs -->
+  <div class="d-flex border-bottom border-light-subtle" style="background-color: var(--bg-surface);">
+    <a href="?q={{ query }}&type=all" class="header-tab {% if tab == 'all' %}active{% endif %}">Top</a>
+    <a href="?q={{ query }}&type=users" class="header-tab {% if tab == 'users' %}active{% endif %}">People</a>
+    <a href="?q={{ query }}&type=posts" class="header-tab {% if tab == 'posts' %}active{% endif %}">Posts</a>
+    <a href="?q={{ query }}&type=tags" class="header-tab {% if tab == 'tags' %}active{% endif %}">Hashtags</a>
+  </div>
+
+  <section class="p-0">
+    {% if query %}
+      <!-- People Section -->
+      {% if users and tab in 'all,users' %}
+        <div class="p-3 border-bottom border-light-subtle" style="background-color: var(--bg-surface);">
+          <h6 class="fw-bold mb-3 text-muted small text-uppercase">People</h6>
+          {% for u in users %}
+            <div class="d-flex align-items-center justify-content-between py-2 border-bottom border-light-subtle">
+              <div class="d-flex align-items-center gap-3">
+                <a href="{% url 'profile_view' username=u.username %}">
+                  <img src="{{ u.profile.avatar_url }}" alt="{{ u.username }}" class="user-avatar-sm">
+                </a>
+                <div>
+                  <a href="{% url 'profile_view' username=u.username %}" class="fw-bold text-decoration-none" style="color: var(--text-primary);">
+                    {{ u.profile.display_name }}
+                  </a>
+                  <div class="text-muted small">@{{ u.username }}</div>
+                  {% if u.profile.bio %}
+                    <div class="small text-secondary mt-1 text-truncate" style="max-width: 320px;">{{ u.profile.bio }}</div>
+                  {% endif %}
+                </div>
+              </div>
+              {% if user.is_authenticated and user != u %}
+                <button type="button" class="btn btn-sm btn-outline-custom btn-follow" onclick="toggleFollow('{{ u.username }}', this)">
+                  Follow
+                </button>
+              {% endif %}
+            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
+
+      <!-- Hashtags Section -->
+      {% if hashtags and tab in 'all,tags' %}
+        <div class="p-3 border-bottom border-light-subtle" style="background-color: var(--bg-surface);">
+          <h6 class="fw-bold mb-3 text-muted small text-uppercase">Hashtags</h6>
+          <div class="d-flex flex-wrap gap-2">
+            {% for tag in hashtags %}
+              <a href="{% url 'hashtag_posts' hashtag_name=tag.name %}" class="btn btn-sm btn-outline-custom rounded-pill">
+                #{{ tag.name }} <span class="badge text-bg-primary rounded-pill ms-1">{{ tag.post_count }}</span>
+              </a>
+            {% endfor %}
+          </div>
+        </div>
+      {% endif %}
+
+      <!-- Posts Section -->
+      {% if posts and tab in 'all,posts' %}
+        <div class="feed-container">
+          {% for post in posts %}
+            {% include 'includes/post_card.html' with post=post %}
+          {% endfor %}
+        </div>
+      {% endif %}
+
+      <!-- No Results State -->
+      {% if not users and not posts and not hashtags %}
+        <div class="empty-state">
+          <div class="empty-state-icon">
+            <i class="fa-solid fa-magnifying-glass"></i>
+          </div>
+          <h4 class="empty-state-title">No results found</h4>
+          <p class="empty-state-desc">Try searching for something else or check spelling for "{{ query }}".</p>
+        </div>
+      {% endif %}
+
+    {% else %}
+      <!-- Empty query state -->
+      <div class="empty-state">
+        <div class="empty-state-icon">
+          <i class="fa-solid fa-arrow-pointer"></i>
+        </div>
+        <h4 class="empty-state-title">Explore Search</h4>
+        <p class="empty-state-desc">Search for people, topics, thoughts, and #hashtags across the network.</p>
+      </div>
+    {% endif %}
+  </section>
+{% endblock %}

@@ -1,0 +1,237 @@
+{% load static %}
+<article class="post-card" id="postCard-{{ post.id }}">
+  <!-- Post Header -->
+  <div class="post-header">
+    <div class="post-author-info">
+      <a href="{% url 'profile_view' username=post.author.username %}">
+        <img src="{{ post.author.profile.avatar_url }}" alt="{{ post.author.username }}" class="user-avatar-md">
+      </a>
+      <div>
+        <div class="d-flex align-items-center gap-1">
+          <a href="{% url 'profile_view' username=post.author.username %}" class="post-author-name">
+            {{ post.author.profile.display_name }}
+          </a>
+          <span class="post-author-uname">@{{ post.author.username }}</span>
+          <span class="text-muted small">·</span>
+          <span class="post-timestamp">{{ post.created_at|timesince }} ago</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Post Options Dropdown -->
+    <div class="dropdown">
+      <button class="btn btn-sm btn-link text-muted p-1" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+        <i class="fa-solid fa-ellipsis"></i>
+      </button>
+      <ul class="dropdown-menu dropdown-menu-end shadow border-0 rounded-3 py-1" style="background-color: var(--bg-surface-elevated); min-width: 160px;">
+        <li>
+          <a class="dropdown-item py-2 px-3 small d-flex align-items-center gap-2" href="{% url 'post_detail' pk=post.pk %}" style="color: var(--text-primary);">
+            <i class="fa-solid fa-up-right-from-square text-muted"></i> View Post
+          </a>
+        </li>
+        {% if user == post.author %}
+          <li>
+            <button class="dropdown-item py-2 px-3 small d-flex align-items-center gap-2 border-0 bg-transparent" onclick="openEditPostModal({{ post.id }}, `{{ post.content|escapejs }}`)" style="color: var(--text-primary);">
+              <i class="fa-regular fa-pen-to-square text-muted"></i> Edit Post
+            </button>
+          </li>
+          <li>
+            <button class="dropdown-item py-2 px-3 small d-flex align-items-center gap-2 text-danger border-0 bg-transparent" onclick="deletePost({{ post.id }})">
+              <i class="fa-regular fa-trash-can"></i> Delete Post
+            </button>
+          </li>
+        {% else %}
+          <li>
+            <button class="dropdown-item py-2 px-3 small d-flex align-items-center gap-2 text-warning border-0 bg-transparent" onclick="openReportModal({{ post.id }})">
+              <i class="fa-regular fa-flag"></i> Report Post
+            </button>
+          </li>
+          {% if user.is_authenticated %}
+            <li>
+              <button class="dropdown-item py-2 px-3 small d-flex align-items-center gap-2 text-danger border-0 bg-transparent" onclick="toggleBlock('{{ post.author.username }}', this)">
+                <i class="fa-solid fa-ban"></i> Block @{{ post.author.username }}
+              </button>
+            </li>
+          {% endif %}
+        {% endif %}
+      </ul>
+    </div>
+  </div>
+
+  <!-- Announcement / Milestone Badge -->
+  {% if post.post_type == 'announcement' and post.badge_text %}
+    <div class="mb-2">
+      <span class="badge rounded-pill px-3 py-2 fw-bold shadow-sm" style="background: var(--primary-gradient); color: #FFFFFF; font-size: 0.8rem;">
+        <i class="fa-solid {{ post.badge_icon|default:'fa-rocket' }} me-1"></i> {{ post.badge_text }}
+      </span>
+    </div>
+  {% endif %}
+
+  <!-- Post Body Text -->
+  {% if post.content %}
+    <div class="post-body">
+      {{ post.formatted_content }}
+    </div>
+  {% endif %}
+
+  <!-- Code Snippet Display -->
+  {% if post.post_type == 'code' and post.code_snippet %}
+    <div class="code-snippet-box rounded-3 my-3 overflow-hidden shadow-sm" style="background: #0F172A; border: 1px solid var(--border-subtle);">
+      <div class="d-flex align-items-center justify-content-between px-3 py-2" style="background: #1E293B; border-bottom: 1px solid rgba(255,255,255,0.08);">
+        <div class="d-flex align-items-center gap-2">
+          <span style="width: 10px; height: 10px; border-radius: 50%; background: #EF4444; display: inline-block;"></span>
+          <span style="width: 10px; height: 10px; border-radius: 50%; background: #F59E0B; display: inline-block;"></span>
+          <span style="width: 10px; height: 10px; border-radius: 50%; background: #10B981; display: inline-block;"></span>
+          <span class="badge bg-secondary-subtle text-white-50 ms-2" style="font-size: 0.72rem; text-transform: uppercase;">{{ post.code_language }}</span>
+        </div>
+        <button type="button" class="btn btn-sm btn-link text-white-50 p-0 text-decoration-none copy-code-btn" onclick="copyCodeSnippet(this)">
+          <i class="fa-regular fa-copy me-1"></i> <span>Copy</span>
+        </button>
+      </div>
+      <pre class="p-3 m-0 text-light" style="font-family: 'Fira Code', Consolas, Monaco, monospace; font-size: 0.86rem; overflow-x: auto; line-height: 1.55;"><code>{{ post.code_snippet }}</code></pre>
+    </div>
+  {% endif %}
+
+  <!-- Interactive Poll Display -->
+  {% if post.post_type == 'poll' and post.poll_options.exists %}
+    <div class="poll-widget-box rounded-3 p-3 my-3" id="pollWidget-{{ post.id }}" style="background: var(--bg-subtle); border: 1px solid var(--border-subtle);">
+      {% if post.poll_question %}
+        <div class="fw-bold mb-3" style="color: var(--text-primary); font-size: 0.98rem;">
+          <i class="fa-solid fa-chart-simple text-primary me-2"></i> {{ post.poll_question }}
+        </div>
+      {% endif %}
+
+      <div class="poll-options-list d-flex flex-direction-column flex-column gap-2" id="pollOptionsList-{{ post.id }}">
+        {% with voted_opt_id=post|stringformat:"s" %}
+          {% for opt in post.poll_options.all %}
+            <button type="button" class="btn w-100 text-start position-relative overflow-hidden poll-opt-btn p-2 rounded-3 border-light-subtle" onclick="votePoll({{ post.id }}, {{ opt.id }}, this)" style="border: 1px solid var(--border-subtle); background: var(--bg-surface); color: var(--text-primary);">
+              <!-- Percentage Progress Fill -->
+              <div class="poll-bar-fill position-absolute top-0 start-0 bottom-0" style="width: {{ opt.percentage }}%; background: var(--primary-light); z-index: 1; transition: width 0.4s ease;"></div>
+              
+              <div class="position-relative d-flex justify-content-between align-items-center px-2 py-1" style="z-index: 2;">
+                <span class="fw-medium">
+                  {{ opt.text }}
+                </span>
+                <span class="fw-bold small ms-2 text-muted poll-opt-pct">
+                  {{ opt.percentage }}%
+                </span>
+              </div>
+            </button>
+          {% endfor %}
+        {% endwith %}
+      </div>
+
+      <div class="mt-2 text-muted small d-flex align-items-center justify-content-between" style="font-size: 0.78rem;">
+        <span id="pollTotalVotes-{{ post.id }}">{{ post.total_poll_votes }} vote{{ post.total_poll_votes|pluralize }}</span>
+        <span><i class="fa-solid fa-check-to-slot me-1"></i> Interactive Poll</span>
+      </div>
+    </div>
+  {% endif %}
+
+  <!-- Post Image Gallery -->
+  {% if post.images.exists %}
+    {% with images=post.images.all count=post.images.count %}
+      <div class="post-gallery count-{% if count > 4 %}4{% else %}{{ count }}{% endif %}">
+        {% for img in images %}
+          <img src="{{ img.image.url }}" alt="Post image" class="gallery-item" onclick="openLightbox('{{ img.image.url }}')" loading="lazy">
+        {% endfor %}
+      </div>
+    {% endwith %}
+  {% endif %}
+
+  <!-- Post Actions Bar -->
+  <div class="post-actions">
+    <!-- Like Action -->
+    <div class="d-flex align-items-center">
+      {% if user.is_authenticated %}
+        {% if post|stringformat:"s" %}
+          <!-- Check if liked -->
+          <button type="button" class="action-btn like-btn {% if user in post.likes.all|dictsort:'id' or user.is_authenticated and post.is_liked_by_user %}liked{% endif %}" onclick="toggleLike({{ post.id }}, this)" title="Like">
+            <i class="{% if user in post.likes.all|dictsort:'id' or user.is_authenticated and post.is_liked_by_user %}fa-solid{% else %}fa-regular{% endif %} fa-heart"></i>
+            <span class="like-count">{{ post.likes_count }}</span>
+          </button>
+        {% endif %}
+      {% else %}
+        <a href="{% url 'login' %}" class="action-btn like-btn" title="Log in to like">
+          <i class="fa-regular fa-heart"></i>
+          <span class="like-count">{{ post.likes_count }}</span>
+        </a>
+      {% endif %}
+      
+      <!-- Likes view trigger modal -->
+      {% if post.likes_count > 0 %}
+        <button type="button" class="btn btn-link btn-sm p-0 ms-1 text-muted small text-decoration-none" onclick="openUsersModal('Liked by', '/api/posts/{{ post.id }}/likes/')" style="font-size: 0.75rem;">
+          (view)
+        </button>
+      {% endif %}
+    </div>
+
+    <!-- Comment Action -->
+    <button type="button" class="action-btn comment-btn" onclick="toggleComments({{ post.id }})" title="Comments">
+      <i class="fa-regular fa-comment"></i>
+      <span class="comment-count">{{ post.comments_count }}</span>
+    </button>
+
+    <!-- Bookmark Action -->
+    {% if user.is_authenticated %}
+      <button type="button" class="action-btn bookmark-btn {% if post.is_bookmarked_by_user %}saved{% endif %}" onclick="toggleBookmark({{ post.id }}, this)" title="Save to bookmarks">
+        <i class="{% if post.is_bookmarked_by_user %}fa-solid{% else %}fa-regular{% endif %} fa-bookmark"></i>
+      </button>
+    {% endif %}
+
+    <!-- Share Action -->
+    <button type="button" class="action-btn share-btn" onclick="sharePost('{% url 'post_detail' pk=post.pk %}', 'Post by @{{ post.author.username }} on Nexus')" title="Share">
+      <i class="fa-regular fa-share-from-square"></i>
+    </button>
+  </div>
+
+  <!-- Inline Comments Drawer -->
+  <div class="comments-container" id="commentsSection-{{ post.id }}" style="display: none;">
+    <!-- Add Comment Box -->
+    {% if user.is_authenticated %}
+      <form class="d-flex align-items-center gap-2 mb-3" onsubmit="submitComment(event, {{ post.id }})">
+        <img src="{{ current_profile.avatar_url }}" alt="{{ user.username }}" class="user-avatar-sm" style="width: 32px; height: 32px;">
+        <input type="text" name="content" class="form-control form-control-sm rounded-pill" placeholder="Write a comment..." autocomplete="off" style="background: var(--bg-subtle); color: var(--text-primary); border-color: var(--border-subtle);" required>
+        <input type="hidden" name="parent_id" value="">
+        <button type="submit" class="btn btn-sm btn-primary-gradient rounded-pill px-3">
+          <i class="fa-solid fa-paper-plane"></i>
+        </button>
+      </form>
+    {% else %}
+      <div class="text-center py-2 text-muted small mb-2">
+        <a href="{% url 'login' %}">Log in</a> to join the conversation.
+      </div>
+    {% endif %}
+
+    <!-- Comments List -->
+    <div class="comments-list" id="commentsList-{{ post.id }}">
+      {% for comment in post.comments.all %}
+        {% if not comment.parent %}
+          <div class="comment-item" id="commentItem-{{ comment.id }}">
+            <a href="{% url 'profile_view' username=comment.author.username %}">
+              <img src="{{ comment.author.profile.avatar_url }}" alt="{{ comment.author.username }}" class="user-avatar-sm" style="width: 32px; height: 32px;">
+            </a>
+            <div class="comment-bubble">
+              <div class="comment-header">
+                <a href="{% url 'profile_view' username=comment.author.username %}" class="comment-author-name">
+                  {{ comment.author.profile.display_name }}
+                </a>
+                <div class="d-flex align-items-center gap-2">
+                  <span class="comment-time">{{ comment.created_at|timesince }} ago</span>
+                  {% if user == comment.author or user == post.author %}
+                    <button type="button" class="btn btn-link btn-sm p-0 text-danger" onclick="deleteComment({{ comment.id }}, {{ post.id }})">
+                      <i class="fa-solid fa-trash-can fa-xs"></i>
+                    </button>
+                  {% endif %}
+                </div>
+              </div>
+              <div class="comment-text">
+                {{ comment.formatted_content }}
+              </div>
+            </div>
+          </div>
+        {% endif %}
+      {% endfor %}
+    </div>
+  </div>
+</article>

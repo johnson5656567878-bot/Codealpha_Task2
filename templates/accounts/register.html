@@ -1,0 +1,85 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Create Account | Nexus{% endblock %}
+
+{% block right_sidebar %}{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center justify-content-center" style="min-height: 85vh; padding: 1.5rem;">
+  <div class="card p-4 p-md-5 border-0 shadow-lg rounded-4 w-100" style="max-width: 520px; background-color: var(--bg-surface);">
+    
+    <div class="text-center mb-4">
+      <img src="{% static 'images/logo.svg' %}" alt="Nexus Logo" class="brand-logo mb-2" style="width: 54px; height: 54px;">
+      <h3 class="fw-bold mb-1" style="color: var(--text-primary);">Join Nexus Today</h3>
+      <p class="text-muted small">Connect with friends, share your passions, and discover ideas.</p>
+    </div>
+
+    <form method="POST" enctype="multipart/form-data">
+      {% csrf_token %}
+
+      <div class="row g-3">
+        <div class="col-12">
+          <label class="form-label small fw-bold" style="color: var(--text-secondary);">Full Name</label>
+          {{ form.full_name }}
+          {% if form.full_name.errors %}
+            <div class="text-danger small mt-1">{{ form.full_name.errors.0 }}</div>
+          {% endif %}
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label small fw-bold" style="color: var(--text-secondary);">Username</label>
+          {{ form.username }}
+          {% if form.username.errors %}
+            <div class="text-danger small mt-1">{{ form.username.errors.0 }}</div>
+          {% endif %}
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label small fw-bold" style="color: var(--text-secondary);">Email Address</label>
+          {{ form.email }}
+          {% if form.email.errors %}
+            <div class="text-danger small mt-1">{{ form.email.errors.0 }}</div>
+          {% endif %}
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label small fw-bold" style="color: var(--text-secondary);">Password</label>
+          {{ form.password }}
+          {% if form.password.errors %}
+            <div class="text-danger small mt-1">{{ form.password.errors.0 }}</div>
+          {% endif %}
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label small fw-bold" style="color: var(--text-secondary);">Confirm Password</label>
+          {{ form.confirm_password }}
+          {% if form.confirm_password.errors %}
+            <div class="text-danger small mt-1">{{ form.confirm_password.errors.0 }}</div>
+          {% endif %}
+        </div>
+
+        <div class="col-12">
+          <label class="form-label small fw-bold" style="color: var(--text-secondary);">Profile Picture (Optional)</label>
+          {{ form.profile_picture }}
+          {% if form.profile_picture.errors %}
+            <div class="text-danger small mt-1">{{ form.profile_picture.errors.0 }}</div>
+          {% endif %}
+        </div>
+
+        <div class="col-12 mt-4">
+          <button type="submit" class="btn btn-primary-gradient w-100 py-2 fw-bold">
+            Create Account
+          </button>
+        </div>
+      </div>
+    </form>
+
+    <div class="text-center mt-4 pt-2 border-top border-light-subtle">
+      <span class="text-muted small">Already have an account?</span>
+      <a href="{% url 'login' %}" class="small fw-bold text-decoration-none ms-1">Log in here</a>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,146 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Settings | Nexus{% endblock %}
+
+{% block content %}
+  <header class="main-header">
+    <span class="fw-bold fs-5" style="color: var(--text-primary);">Settings</span>
+  </header>
+
+  <div class="p-3">
+    <!-- Settings Section Tabs -->
+    <ul class="nav nav-pills mb-4 gap-2" id="settingsTabs" role="tablist">
+      <li class="nav-item">
+        <a class="nav-link rounded-pill px-4 {% if active_section == 'profile' %}active bg-primary{% else %}text-secondary bg-subtle{% endif %}" href="?section=profile">
+          <i class="fa-solid fa-user me-2"></i> Edit Profile
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link rounded-pill px-4 {% if active_section == 'password' %}active bg-primary{% else %}text-secondary bg-subtle{% endif %}" href="?section=password">
+          <i class="fa-solid fa-lock me-2"></i> Password
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link rounded-pill px-4 {% if active_section == 'blocked' %}active bg-primary{% else %}text-secondary bg-subtle{% endif %}" href="?section=blocked">
+          <i class="fa-solid fa-ban me-2"></i> Blocked Users
+        </a>
+      </li>
+    </ul>
+
+    {% if active_section == 'profile' %}
+      <!-- Edit Profile Section -->
+      <div class="card p-4 border-0 shadow-sm rounded-4" style="background-color: var(--bg-surface);">
+        <h5 class="fw-bold mb-3" style="color: var(--text-primary);">Edit Profile Information</h5>
+        <form method="POST" enctype="multipart/form-data">
+          {% csrf_token %}
+          <input type="hidden" name="action" value="edit_profile">
+
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label small fw-bold">First Name</label>
+              {{ profile_form.first_name }}
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small fw-bold">Last Name</label>
+              {{ profile_form.last_name }}
+            </div>
+            <div class="col-12">
+              <label class="form-label small fw-bold">Bio</label>
+              {{ profile_form.bio }}
+              <div class="form-text small">Brief description of who you are (max 500 chars).</div>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small fw-bold">Location</label>
+              {{ profile_form.location }}
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small fw-bold">Website</label>
+              {{ profile_form.website }}
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small fw-bold">Profile Picture (Avatar)</label>
+              {{ profile_form.profile_picture }}
+              <div class="form-text small">Recommended: Square format JPG, PNG, WEBP (max 5MB).</div>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small fw-bold">Cover Banner Image</label>
+              {{ profile_form.cover_image }}
+              <div class="form-text small">Recommended: 1200x400 landscape banner.</div>
+            </div>
+            <div class="col-12 mt-4">
+              <button type="submit" class="btn btn-primary-gradient px-4">
+                Save Profile Changes
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+
+    {% elif active_section == 'password' %}
+      <!-- Change Password Section -->
+      <div class="card p-4 border-0 shadow-sm rounded-4" style="background-color: var(--bg-surface); max-width: 540px;">
+        <h5 class="fw-bold mb-3" style="color: var(--text-primary);">Change Password</h5>
+        <form method="POST">
+          {% csrf_token %}
+          <input type="hidden" name="action" value="change_password">
+
+          <div class="mb-3">
+            <label class="form-label small fw-bold">Current Password</label>
+            {{ password_form.current_password }}
+            {% if password_form.current_password.errors %}
+              <div class="text-danger small mt-1">{{ password_form.current_password.errors.0 }}</div>
+            {% endif %}
+          </div>
+          <div class="mb-3">
+            <label class="form-label small fw-bold">New Password</label>
+            {{ password_form.new_password }}
+            {% if password_form.new_password.errors %}
+              <div class="text-danger small mt-1">{{ password_form.new_password.errors.0 }}</div>
+            {% endif %}
+          </div>
+          <div class="mb-3">
+            <label class="form-label small fw-bold">Confirm New Password</label>
+            {{ password_form.confirm_new_password }}
+            {% if password_form.confirm_new_password.errors %}
+              <div class="text-danger small mt-1">{{ password_form.confirm_new_password.errors.0 }}</div>
+            {% endif %}
+          </div>
+
+          <button type="submit" class="btn btn-primary-gradient px-4 mt-2">
+            Update Password
+          </button>
+        </form>
+      </div>
+
+    {% elif active_section == 'blocked' %}
+      <!-- Blocked Users Section -->
+      <div class="card p-4 border-0 shadow-sm rounded-4" style="background-color: var(--bg-surface);">
+        <h5 class="fw-bold mb-3" style="color: var(--text-primary);">Blocked Accounts</h5>
+        {% if blocked_users %}
+          <div class="list-group list-group-flush">
+            {% for block in blocked_users %}
+              <div class="list-group-item d-flex align-items-center justify-content-between px-0 py-3 border-light-subtle bg-transparent">
+                <div class="d-flex align-items-center gap-3">
+                  <img src="{{ block.blocked.profile.avatar_url }}" alt="{{ block.blocked.username }}" class="user-avatar-sm">
+                  <div>
+                    <h6 class="mb-0 fw-bold" style="color: var(--text-primary);">{{ block.blocked.profile.display_name }}</h6>
+                    <span class="text-muted small">@{{ block.blocked.username }}</span>
+                  </div>
+                </div>
+                <button type="button" class="btn btn-sm btn-outline-danger px-3 rounded-pill" onclick="toggleBlock('{{ block.blocked.username }}', this)">
+                  Unblock
+                </button>
+              </div>
+            {% endfor %}
+          </div>
+        {% else %}
+          <div class="text-center py-4 text-muted">
+            <i class="fa-solid fa-shield-halved fa-2x mb-2 text-secondary"></i>
+            <p class="mb-0">You haven't blocked any accounts.</p>
+          </div>
+        {% endif %}
+      </div>
+    {% endif %}
+  </div>
+{% endblock %}

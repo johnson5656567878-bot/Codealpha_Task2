@@ -1,0 +1,176 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Home | Nexus{% endblock %}
+
+{% block content %}
+  <!-- Header with Feed Switcher Tabs -->
+  <header class="main-header">
+    <div class="header-tabs">
+      <a href="{% url 'home' %}?feed=for_you" class="header-tab {% if feed_type != 'following' %}active{% endif %}">
+        For You
+      </a>
+      <a href="{% url 'home' %}?feed=following" class="header-tab {% if feed_type == 'following' %}active{% endif %}">
+        Following
+      </a>
+    </div>
+  </header>
+
+  <!-- Post Creation Widget -->
+  <section class="compose-card">
+    <form id="createPostForm" onsubmit="submitCreatePost(event)">
+      <div class="compose-inner">
+        <a href="{% url 'profile_view' username=user.username %}">
+          <img src="{{ current_profile.avatar_url }}" alt="{{ user.username }}" class="user-avatar-md">
+        </a>
+        <div class="compose-main">
+          <input type="hidden" name="post_type" id="composePostType" value="standard">
+          
+          <textarea name="content" class="compose-textarea" placeholder="What's happening in your world? Use #hashtags or @mentions..." rows="3"></textarea>
+          
+          <!-- Image Previews Container -->
+          <div id="composeImagePreviews" class="image-preview-container"></div>
+          
+          <!-- Hidden multi-image file input -->
+          <input type="file" id="postImageFileInput" name="images" multiple accept="image/*" class="d-none" onchange="handleImageSelect(this)">
+
+          <!-- Poll Builder Drawer (Hidden by default) -->
+          <div id="composePollDrawer" class="rounded-3 p-3 my-2" style="display: none; background: var(--bg-subtle); border: 1px dashed var(--border-subtle);">
+            <div class="d-flex align-items-center justify-content-between mb-2">
+              <span class="fw-bold small text-primary"><i class="fa-solid fa-chart-simple me-1"></i> Create a Community Poll</span>
+              <button type="button" class="btn btn-sm btn-link text-muted p-0" onclick="toggleComposeDrawer('poll')"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <input type="text" name="poll_question" class="form-control form-control-sm mb-2" placeholder="Ask a question..." style="background: var(--bg-surface); color: var(--text-primary); border-color: var(--border-subtle);">
+            <div id="pollOptionsInputContainer" class="d-flex flex-column gap-2">
+              <input type="text" name="poll_options[]" class="form-control form-control-sm" placeholder="Choice 1" style="background: var(--bg-surface); color: var(--text-primary); border-color: var(--border-subtle);">
+              <input type="text" name="poll_options[]" class="form-control form-control-sm" placeholder="Choice 2" style="background: var(--bg-surface); color: var(--text-primary); border-color: var(--border-subtle);">
+            </div>
+            <button type="button" class="btn btn-sm btn-link text-primary p-0 mt-2 small text-decoration-none" onclick="addPollOptionField()">
+              <i class="fa-solid fa-plus me-1"></i> Add option
+            </button>
+          </div>
+
+          <!-- Code Snippet Drawer (Hidden by default) -->
+          <div id="composeCodeDrawer" class="rounded-3 p-3 my-2" style="display: none; background: #0F172A; border: 1px solid var(--border-subtle);">
+            <div class="d-flex align-items-center justify-content-between mb-2">
+              <span class="fw-bold small text-light"><i class="fa-solid fa-code me-1 text-primary"></i> Share Code Snippet</span>
+              <button type="button" class="btn btn-sm btn-link text-white-50 p-0" onclick="toggleComposeDrawer('code')"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="mb-2">
+              <select name="code_language" class="form-select form-select-sm" style="max-width: 160px; background: #1E293B; color: #FFFFFF; border-color: rgba(255,255,255,0.1);">
+                <option value="python">Python</option>
+                <option value="javascript">JavaScript</option>
+                <option value="typescript">TypeScript</option>
+                <option value="html">HTML / CSS</option>
+                <option value="sql">SQL</option>
+                <option value="rust">Rust</option>
+                <option value="go">Go</option>
+              </select>
+            </div>
+            <textarea name="code_snippet" class="form-control form-control-sm font-monospace" rows="4" placeholder="// Paste code here..." style="background: #1E293B; color: #38BDF8; border-color: rgba(255,255,255,0.1);"></textarea>
+          </div>
+
+          <!-- Announcement / Milestone Drawer -->
+          <div id="composeBadgeDrawer" class="rounded-3 p-3 my-2" style="display: none; background: var(--bg-subtle); border: 1px dashed var(--border-subtle);">
+            <div class="d-flex align-items-center justify-content-between mb-2">
+              <span class="fw-bold small text-primary"><i class="fa-solid fa-bullhorn me-1"></i> Post Milestone / Announcement</span>
+              <button type="button" class="btn btn-sm btn-link text-muted p-0" onclick="toggleComposeDrawer('announcement')"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="row g-2">
+              <div class="col-8">
+                <input type="text" name="badge_text" class="form-control form-control-sm" placeholder="e.g. 🚀 Product Launch, 🎉 Milestone" style="background: var(--bg-surface); color: var(--text-primary); border-color: var(--border-subtle);">
+              </div>
+              <div class="col-4">
+                <select name="badge_icon" class="form-select form-select-sm" style="background: var(--bg-surface); color: var(--text-primary); border-color: var(--border-subtle);">
+                  <option value="fa-rocket">🚀 Launch</option>
+                  <option value="fa-trophy">🏆 Milestone</option>
+                  <option value="fa-lightbulb">💡 Pro Tip</option>
+                  <option value="fa-briefcase">💼 We're Hiring</option>
+                  <option value="fa-fire">🔥 Hot Topic</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div class="compose-actions">
+            <div class="compose-tools">
+              <!-- Upload Image Button -->
+              <button type="button" class="tool-btn" onclick="document.getElementById('postImageFileInput').click()" title="Attach photos">
+                <i class="fa-regular fa-image"></i>
+              </button>
+              <!-- Interactive Poll Button -->
+              <button type="button" class="tool-btn" onclick="toggleComposeDrawer('poll')" title="Create poll">
+                <i class="fa-solid fa-chart-simple"></i>
+              </button>
+              <!-- Code Snippet Button -->
+              <button type="button" class="tool-btn" onclick="toggleComposeDrawer('code')" title="Share code snippet">
+                <i class="fa-solid fa-code"></i>
+              </button>
+              <!-- Milestone / Badge Button -->
+              <button type="button" class="tool-btn" onclick="toggleComposeDrawer('announcement')" title="Milestone announcement">
+                <i class="fa-solid fa-bullhorn"></i>
+              </button>
+              <!-- Insert Hashtag Helper -->
+              <button type="button" class="tool-btn" onclick="const ta = document.querySelector('textarea[name=content]'); ta.value += ' #'; ta.focus();" title="Add hashtag">
+                <i class="fa-solid fa-hashtag"></i>
+              </button>
+            </div>
+            <button type="submit" class="btn btn-sm btn-primary-gradient px-4">
+              Post
+            </button>
+          </div>
+        </div>
+      </div>
+    </form>
+  </section>
+
+  <!-- Feed Stream -->
+  <section class="feed-container">
+    {% if posts %}
+      {% for post in posts %}
+        {% include 'includes/post_card.html' with post=post %}
+      {% endfor %}
+
+      <!-- Pagination -->
+      {% if posts.has_other_pages %}
+        <div class="p-3 text-center">
+          <nav>
+            <ul class="pagination justify-content-center m-0">
+              {% if posts.has_previous %}
+                <li class="page-item">
+                  <a class="page-link rounded-pill px-3 me-2 border-0" style="background: var(--bg-surface); color: var(--text-primary);" href="?feed={{ feed_type }}&page={{ posts.previous_page_number }}">Previous</a>
+                </li>
+              {% endif %}
+              <li class="page-item disabled">
+                <span class="page-link border-0 bg-transparent" style="color: var(--text-muted);">
+                  Page {{ posts.number }} of {{ posts.paginator.num_pages }}
+                </span>
+              </li>
+              {% if posts.has_next %}
+                <li class="page-item">
+                  <a class="page-link rounded-pill px-3 ms-2 border-0" style="background: var(--bg-surface); color: var(--text-primary);" href="?feed={{ feed_type }}&page={{ posts.next_page_number }}">Next</a>
+                </li>
+              {% endif %}
+            </ul>
+          </nav>
+        </div>
+      {% endif %}
+
+    {% else %}
+      <!-- Empty State -->
+      <div class="empty-state">
+        <div class="empty-state-icon">
+          <i class="fa-regular fa-compass"></i>
+        </div>
+        <h4 class="empty-state-title">No posts here yet</h4>
+        <p class="empty-state-desc">
+          {% if feed_type == 'following' %}
+            You haven't followed anyone with posts yet. Check out the "For You" tab or explore suggested creators!
+          {% else %}
+            Be the first to share your thoughts, stories, and images with the community.
+          {% endif %}
+        </p>
+      </div>
+    {% endif %}
+  </section>
+{% endblock %}

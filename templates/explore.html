@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Explore | Nexus{% endblock %}
+
+{% block content %}
+  <header class="main-header">
+    <div class="d-flex align-items-center gap-3 w-100">
+      <span class="fw-bold fs-5" style="color: var(--text-primary);">Explore</span>
+    </div>
+  </header>
+
+  <!-- Trending Tags Carousel / Grid -->
+  {% if trending_hashtags %}
+    <div class="p-3 border-bottom border-light-subtle" style="background-color: var(--bg-surface);">
+      <h6 class="fw-bold mb-3 d-flex align-items-center gap-2" style="color: var(--text-primary);">
+        <i class="fa-solid fa-fire text-danger"></i> Trending on Nexus
+      </h6>
+      <div class="d-flex flex-wrap gap-2">
+        {% for tag in trending_hashtags %}
+          <a href="{% url 'hashtag_posts' hashtag_name=tag.name %}" class="btn btn-sm btn-outline-custom rounded-pill">
+            #{{ tag.name }} <span class="badge rounded-pill text-bg-primary ms-1" style="font-size: 0.7rem;">{{ tag.post_count }}</span>
+          </a>
+        {% endfor %}
+      </div>
+    </div>
+  {% endif %}
+
+  <!-- Explore Posts Stream -->
+  <section class="feed-container">
+    {% if posts %}
+      {% for post in posts %}
+        {% include 'includes/post_card.html' with post=post %}
+      {% endfor %}
+
+      {% if posts.has_other_pages %}
+        <div class="p-3 text-center">
+          <nav>
+            <ul class="pagination justify-content-center m-0">
+              {% if posts.has_previous %}
+                <li class="page-item">
+                  <a class="page-link rounded-pill px-3 me-2 border-0" style="background: var(--bg-surface); color: var(--text-primary);" href="?page={{ posts.previous_page_number }}">Previous</a>
+                </li>
+              {% endif %}
+              <li class="page-item disabled">
+                <span class="page-link border-0 bg-transparent" style="color: var(--text-muted);">
+                  Page {{ posts.number }} of {{ posts.paginator.num_pages }}
+                </span>
+              </li>
+              {% if posts.has_next %}
+                <li class="page-item">
+                  <a class="page-link rounded-pill px-3 ms-2 border-0" style="background: var(--bg-surface); color: var(--text-primary);" href="?page={{ posts.next_page_number }}">Next</a>
+                </li>
+              {% endif %}
+            </ul>
+          </nav>
+        </div>
+      {% endif %}
+
+    {% else %}
+      <div class="empty-state">
+        <div class="empty-state-icon">
+          <i class="fa-solid fa-globe"></i>
+        </div>
+        <h4 class="empty-state-title">No content to explore yet</h4>
+        <p class="empty-state-desc">Start creating posts or check back shortly as the community grows.</p>
+      </div>
+    {% endif %}
+  </section>
+{% endblock %}

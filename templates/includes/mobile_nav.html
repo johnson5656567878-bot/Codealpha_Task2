@@ -1,0 +1,20 @@
+<nav class="mobile-nav-bar">
+  <a href="{% url 'home' %}" class="mobile-nav-item {% if request.resolver_match.url_name == 'home' %}active{% endif %}">
+    <i class="fa-solid fa-house"></i>
+  </a>
+  <a href="{% url 'explore' %}" class="mobile-nav-item {% if request.resolver_match.url_name == 'explore' %}active{% endif %}">
+    <i class="fa-solid fa-compass"></i>
+  </a>
+  <a href="{% url 'search' %}" class="mobile-nav-item {% if request.resolver_match.url_name == 'search' %}active{% endif %}">
+    <i class="fa-solid fa-magnifying-glass"></i>
+  </a>
+  <a href="{% url 'notifications_view' %}" class="mobile-nav-item {% if request.resolver_match.url_name == 'notifications_view' %}active{% endif %}">
+    <i class="fa-solid fa-bell"></i>
+    {% if unread_notifications_count > 0 %}
+      <span class="position-absolute top-2 start-55 translate-middle p-1 bg-danger border border-light rounded-circle" style="width: 8px; height: 8px;"></span>
+    {% endif %}
+  </a>
+  <a href="{% url 'profile_view' username=user.username %}" class="mobile-nav-item {% if request.resolver_match.url_name == 'profile_view' and target_user == user %}active{% endif %}">
+    <img src="{{ current_profile.avatar_url }}" alt="{{ user.username }}" class="user-avatar-sm" style="width: 28px; height: 28px;">
+  </a>
+</nav>

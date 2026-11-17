@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Bookmarks | Nexus{% endblock %}
+
+{% block content %}
+  <header class="main-header">
+    <div class="d-flex align-items-center gap-3">
+      <span class="fw-bold fs-5" style="color: var(--text-primary);">Bookmarks</span>
+    </div>
+  </header>
+
+  <section class="feed-container">
+    {% if posts %}
+      {% for post in posts %}
+        {% include 'includes/post_card.html' with post=post %}
+      {% endfor %}
+    {% else %}
+      <div class="empty-state">
+        <div class="empty-state-icon">
+          <i class="fa-regular fa-bookmark"></i>
+        </div>
+        <h4 class="empty-state-title">Save posts for later</h4>
+        <p class="empty-state-desc">Don't let the good stuff get away! Bookmark posts to easily find them again in the future.</p>
+      </div>
+    {% endif %}
+  </section>
+{% endblock %}

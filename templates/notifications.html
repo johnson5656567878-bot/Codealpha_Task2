@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Notifications | Nexus{% endblock %}
+
+{% block content %}
+  <header class="main-header d-flex align-items-center justify-content-between">
+    <span class="fw-bold fs-5" style="color: var(--text-primary);">Notifications</span>
+    <button type="button" class="btn btn-sm btn-outline-custom" onclick="markAllNotificationsRead()">
+      <i class="fa-solid fa-check-double me-1"></i> Mark all as read
+    </button>
+  </header>
+
+  <!-- Filter Tabs -->
+  <div class="d-flex border-bottom border-light-subtle" style="background-color: var(--bg-surface);">
+    <a href="?filter=all" class="header-tab {% if filter_type == 'all' %}active{% endif %}">All</a>
+    <a href="?filter=unread" class="header-tab {% if filter_type == 'unread' %}active{% endif %}">Unread</a>
+    <a href="?filter=like" class="header-tab {% if filter_type == 'like' %}active{% endif %}">Likes</a>
+    <a href="?filter=comment" class="header-tab {% if filter_type == 'comment' %}active{% endif %}">Comments</a>
+    <a href="?filter=follow" class="header-tab {% if filter_type == 'follow' %}active{% endif %}">Follows</a>
+  </div>
+
+  <section class="notifications-list">
+    {% if notifications %}
+      {% for n in notifications %}
+        <div class="d-flex align-items-center justify-content-between p-3 border-bottom border-light-subtle {% if not n.is_read %}bg-subtle{% endif %}" id="notificationItem-{{ n.id }}" style="transition: all 0.2s ease;">
+          <div class="d-flex align-items-center gap-3">
+            <div class="position-relative">
+              <a href="{% url 'profile_view' username=n.sender.username %}">
+                <img src="{{ n.sender.profile.avatar_url }}" alt="{{ n.sender.username }}" class="user-avatar-sm">
+              </a>
+              <!-- Type Icon Overlay -->
+              <span class="position-absolute bottom-0 end-0 bg-white rounded-circle p-1 shadow-sm" style="font-size: 0.65rem; line-height: 1;">
+                <i class="{{ n.icon_class }}"></i>
+              </span>
+            </div>
+            <div>
+              <div class="small" style="color: var(--text-primary);">
+                <a href="{% url 'profile_view' username=n.sender.username %}" class="fw-bold text-decoration-none" style="color: var(--text-primary);">
+                  {{ n.sender.profile.display_name }}
+                </a>
+                <span>{{ n.get_notification_type_display }}</span>
+                {% if n.post %}
+                  <a href="{% url 'post_detail' pk=n.post.pk %}" class="text-decoration-none text-muted">
+                    "{% if n.post.content %}{{ n.post.content|truncatechars:35 }}{% else %}view post{% endif %}"
+                  </a>
+                {% endif %}
+              </div>
+              <div class="text-muted" style="font-size: 0.75rem;">{{ n.created_at|timesince }} ago</div>
+            </div>
+          </div>
+
+          <div class="d-flex align-items-center gap-2">
+            {% if not n.is_read %}
+              <span class="notification-unread-dot p-1 bg-primary rounded-circle" style="width: 8px; height: 8px;"></span>
+              <button type="button" class="btn btn-sm btn-link text-muted p-1" onclick="markNotificationRead({{ n.id }}, this)" title="Mark as read">
+                <i class="fa-solid fa-check"></i>
+              </button>
+            {% endif %}
+          </div>
+        </div>
+      {% endfor %}
+    {% else %}
+      <div class="empty-state">
+        <div class="empty-state-icon">
+          <i class="fa-regular fa-bell"></i>
+        </div>
+        <h4 class="empty-state-title">No notifications yet</h4>
+        <p class="empty-state-desc">When someone likes, comments, or follows you, you'll see it here.</p>
+      </div>
+    {% endif %}
+  </section>
+{% endblock %}

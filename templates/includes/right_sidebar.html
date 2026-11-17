@@ -1,0 +1,65 @@
+<aside class="app-right-sidebar">
+  <!-- Search Input Bar -->
+  <div class="search-widget">
+    <form action="{% url 'search' %}" method="GET">
+      <i class="fa-solid fa-magnifying-glass search-icon"></i>
+      <input type="text" name="q" class="search-input" placeholder="Search Nexus..." value="{{ query|default:'' }}">
+    </form>
+  </div>
+
+  <!-- Who to Follow Widget -->
+  {% if suggested_users %}
+    <div class="widget-card">
+      <div class="widget-title">
+        <span>Who to follow</span>
+      </div>
+      <div class="suggested-users-list">
+        {% for u in suggested_users %}
+          <div class="suggested-user-item">
+            <div class="d-flex align-items-center gap-2 text-truncate" style="flex: 1;">
+              <a href="{% url 'profile_view' username=u.username %}">
+                <img src="{{ u.profile.avatar_url }}" alt="{{ u.username }}" class="user-avatar-sm">
+              </a>
+              <div class="text-truncate">
+                <a href="{% url 'profile_view' username=u.username %}" class="fw-bold small text-truncate d-block" style="color: var(--text-primary); text-decoration: none;">
+                  {{ u.profile.display_name }}
+                </a>
+                <span class="text-muted small text-truncate d-block">@{{ u.username }}</span>
+              </div>
+            </div>
+            <button type="button" class="btn btn-sm btn-outline-custom btn-follow px-3" onclick="toggleFollow('{{ u.username }}', this)">
+              Follow
+            </button>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  {% endif %}
+
+  <!-- Trending Hashtags Widget -->
+  {% if trending_hashtags %}
+    <div class="widget-card">
+      <div class="widget-title">
+        <span>Trending Topics</span>
+        <i class="fa-solid fa-arrow-trend-up text-primary small"></i>
+      </div>
+      <div class="trends-list">
+        {% for tag in trending_hashtags %}
+          <a href="{% url 'hashtag_posts' hashtag_name=tag.name %}" class="trend-item">
+            <div class="trend-tag">#{{ tag.name }}</div>
+            <div class="trend-count">{{ tag.post_count }} post{{ tag.post_count|pluralize }}</div>
+          </a>
+        {% endfor %}
+      </div>
+    </div>
+  {% endif %}
+
+  <!-- Footer Info -->
+  <div class="px-2 text-muted small" style="font-size: 0.78rem; line-height: 1.8;">
+    <a href="#" class="text-muted text-decoration-none me-2">Privacy</a> ·
+    <a href="#" class="text-muted text-decoration-none me-2 ms-2">Terms</a> ·
+    <a href="#" class="text-muted text-decoration-none me-2 ms-2">Cookies</a> ·
+    <a href="#" class="text-muted text-decoration-none ms-2">About</a>
+    <div class="mt-1">Nexus Social Platform &copy; 2026. All rights reserved.</div>
+  </div>
+</aside>
